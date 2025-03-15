@@ -253,4 +253,4 @@ cd ~/elinux_sample/build/elinux/arm64/release/bundle
 
 *   直接在板子进行资源部署编译话需要注意物理内存占用，
 
-![image.png](https://p9-xtjj-sign.byteimg.com/tos-cn-i-73owjymdk6/47314b60da6845f3949cbcbe2b2cff0c~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAg5Lq65b2i5omT56CB5py6:q75.awebp?rk3s=f64ab15b&x-expires=1741664239&x-signature=%2F8oO16rHSHrpy%2FRMow7K4k2u070%3D)
+![image-20250315141700988](D:\desk\code\blog_documents\image\image-20250315141700988.png)
