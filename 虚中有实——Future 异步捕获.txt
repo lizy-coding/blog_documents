@@ -1,0 +1,234 @@
+## **try-catch 原理**：
+
+try-catch 是一种异常处理机制，用于捕获和处理代码中可能抛出的异常。
+
+   - 当程序执行到 try 块时，会按照顺序执行其中的代码；
+   - 如果 try 块中的代码执行异常，程序会立即跳转到与 catch 关键字对应的 catch 块中执行；
+   - 在 catch 块中，可以对异常进行捕获和处理，比如打印错误信息、记录日志、或者进行一些恢复性操作；
+   - 如果 catch 块中的代码执行完毕，程序会继续执行 try-catch 块之后的代码；
+
+
+```mermaid
+flowchart TD
+    Start([开始]) --> TryBlock[执行try块代码]
+    TryBlock --> ExceptionCheck{发生异常?}
+    ExceptionCheck -- 是 --> CatchBlock[执行catch块处理]
+    ExceptionCheck -- 否 --> FinallyBlock
+    CatchBlock --> FinallyBlock[执行finally块]
+    FinallyBlock --> End([结束])
+```
+
+
+## **Future 原理**：
+
+`Future` 是 Dart 中用于处理异步操作的关键字之一。当调用一个异步函数时，该函数会立即返回一个 Future 对象，表示异步操作的结果，异步对象可能是一个值，也可能是一个异常。`Future` 的主要使用场景包括：
+
+1. **异步操作的结果表示**：当需要执行一个耗时的操作，例如从网络获取数据、文件读写操作等，而不想阻塞当前线程时，就可以使用 `Future` 来表示这个异步操作的结果。通过 `Future`，我们可以在异步操作完成后获取到操作的结果，或者在操作失败时获取到错误信息。
+
+2. **异步操作的串行化和并行化**：通过 `Future`，我们可以将多个异步操作串行化或并行化执行，从而提高程序的性能和响应速度。例如，使用 `Future.then()` 方法可以在一个异步操作完成后执行另一个异步操作，或者使用 `Future.wait()` 方法可以等待多个异步操作全部完成后再进行下一步操作。
+
+3. **异常处理**：`Future` 也提供了异常处理的功能。当一个异步操作失败时，可以通过 `catchError()` 方法或 `try-catch` 块来捕获异常，并进行相应的处理。
+
+`Future` 的原理主要是基于事件循环和回调机制。当一个异步操作被调用时，它会立即返回一个 `Future` 对象，表示该操作的结果。然后，异步操作会在后台执行，而不会阻塞当前线程。当操作完成时，会通知事件循环，并将操作的结果传递给对应的 `Future` 对象。这时，可以通过 `Future` 对象的方法来获取操作的结果或处理可能发生的异常。
+
+总的来说，`Future` 关键字提供了一种便捷的方式来处理异步操作，使得程序可以更加高效地利用资源，并提高用户体验。
+
+## 例子分析
+
+```dart
+void main() async {
+    Future<dynamic> catchMethodA(Function executionMethod) async {
+      return await executionMethod();
+    }
+
+    Future<dynamic> catchMethodB() async {
+      print("catchMethodB executioned");
+      throw Exception("catchMethodB throw Error");
+    }
+
+    try {
+      var methodAResult = await catchMethodA(() {
+        try {
+          return catchMethodB();
+        } catch (e) {
+          print("catch a exception in catchMethodB $e");
+        }
+      });
+      print("methodAResult=$methodAResult");
+    } on Exception {
+      print("catch a Exception in catchMethodA, it's main method $e");
+    } on Error {
+      print("catch a Error in catchMethodA, it's main method $e");
+    }
+
+}
+
+```
+
+提问：
+1、执行结果应该是什么
+2、为什么
+
+
+
+
+```mermaid
+flowchart TD
+    Start([main函数开始]) --> A[调用catchMethodA]
+    A --> B["executionMethod匿名函数定义\nλ参数绑定与闭包捕获[2,3](@ref)"]
+    B --> C["执行匿名函数体"]
+    
+    subgraph 匿名函数执行域 [ ]
+        direction TB
+        C --> D["try块逻辑执行"]
+        D --> E[调用catchMethodB]
+        E --> F{抛出Exception?}
+        F -- 是 --> G["catch块异常处理"]
+        G --> H["打印错误日志\n保留执行上下文[2](@ref)"]
+        H --> I["返回默认值null\n(未显式return)"]
+        F -- 否 --> J[返回正常结果]
+    end
+
+    I --> K[methodAResult接收返回值]
+    J --> K
+    K --> L["打印\"methodAResult=null\""]
+    
+    classDef lambda fill:#E8F5E9,stroke:#4CAF50
+    classDef closure fill:#FFF3E0,stroke:#FFA726
+    classDef exception fill:#FFEBEE,stroke:#EF5350
+    classDef decision fill:#FFEECC,stroke:#FF9933
+    
+    class 匿名函数执行域 lambda
+    class H exception
+    class F decision
+    class E closure
+```
+
+
+
+**print:**
+
+```xml
+catchMethodB executioned
+catch a exception in catchMethodA, it's main method Exception: catchMethodB throw Error
+```
+
+**为什么：**
+
+内部函数`catchMethodB`执行前没有使用 `await` 进行同步处理，并不会等待异步操作完成，执行它将会立即返回一个 `Future<dynamic>` 对象。在这种情况下，第一次捕获的将是一个 `Future<dynamic>` 对象，而不是实际的异常。
+
+这意味着外部 `methodAResult` 捕获的是一个未完成的 `Future` 对象，其结果值为异常。外部的 `try-catch` 块通过 `await` 关键字等待这个 `Future` 对象的完成，当异步操作完成后，该 `Future` 对象的状态将变为已完成，并且携带着异常的信息。捕获到了其中携带的异常信息。
+
+
+
+**让我们逐步分析这段代码的执行过程：**
+
+1. `main` 函数开始执行。
+2. `catchMethodA` 函数被调用，传入一个匿名函数作为参数。
+3. `catchMethodA` 函数内部执行传入的匿名函数，即执行以下代码：
+   ```dart
+   try {
+       return catchMethodB();
+   } catch (e) {
+       print("catch a exception in catchMethodB $e");
+   }
+   ```
+4. 在匿名函数内部，`catchMethodB` 函数被调用。
+5. `catchMethodB` 函数内部执行，并打印一条信息。
+6. `catchMethodB` 函数抛出一个异常 `Exception("catchMethodB Error")`。
+7. `Exception("catchMethodB Error")` 以 `Future<dynamic>` 对象返回给`methodAResult` 。
+8. `catchMethodA` 函数接收到异常的 Future 对象，并立即返回给 `main` 函数。
+9. `main` 函数中的 `try-catch` 块捕获到异常的 Future 对象，并执行 catch 块中的代码，打印信息 `"catch a exception in catchMethodA, it's main method $e"`。
+
+因此，`main` 函数的执行结果是打印如下信息：
+```
+catchMethodB executioned
+catch a exception in catchMethodA, it's main method Exception: catchMethodB throw Error
+```
+
+
+在给定的代码中，"catch a exception in catchMethodB" 没有被打印出来，这是因为异常并没有在 `catchMethodB` 函数内部被捕获。让我们仔细分析一下原因：
+
+1. `catchMethodB` 函数内部没有显式的 `try-catch` 块来捕获可能抛出的异常;
+2. 异常在 `catchMethodB` 函数内部抛出后， 以 `Future<dynamic>`返回会沿着调用栈向上层传播
+3. 在 main 中被异步处理时通过 `try-catch` 块捕获到内部的异常;
+
+
+因此，即使异常是在 `catchMethodB` 函数内部抛出，但实际上异常的处理是 main 进行的，所以 "catch a exception in catchMethodB" 没有被打印出来。
+
+
+
+## catch 的捕获项
+ 或许到这里就结束了，但是还想进一步梳理下 catch 的捕获信息
+
+ **常见异常的继承关系：**
+
+```
+Exception
+├─ ArgumentError
+├─ FormatException
+├─ RangeError
+├─ StateError
+└─ TypeError
+Error
+├─ AssertionError
+├─ CastError
+├─ ConcurrentModificationError
+├─ FileSystemException
+├─ HttpException
+├─ NoSuchMethodError
+├─ SocketException
+└─ TimeoutException
+```
+
+ ### Exception 与 Error
+
+`Exception` 和 `Error` 都是用于表示程序中出现的问题的类，但它们在设计初衷和使用场景上存在一些差异：
+
+1. **Exception（异常）**：
+   - 设计初衷：`Exception` 类用于表示程序中的一般性错误或非预期情况。它通常表示由程序错误、无效参数、无效状态等引起的异常情况。
+   - 使用场景：通常情况下，我们会在代码中显式地抛出 `Exception` 类或其子类的实例，来表示程序中的异常情况。在捕获异常时，我们可以选择捕获特定类型的 `Exception` 或捕获所有类型的异常（使用 `catch (Exception e)` 或 `catch (e)`）。
+
+2. **Error（错误）**：
+   - 设计初衷：`Error` 类用于表示程序中的错误情况，通常表示更严重的问题，如内存不足、堆栈溢出等。与 `Exception` 不同，`Error` 表示的是由于程序错误或系统错误导致的问题，而不是程序中的一般性异常情况。
+   - 使用场景：通常情况下，`Error` 不应该被捕获和处理，而是应该由开发者解决并修复问题。如果程序中出现 `Error`，通常意味着存在严重的问题，可能会导致程序崩溃或无法继续运行。因此，我们不建议捕获 `Error`，而是应该尽量避免出现这些错误，或者在出现 `Error` 时及时停止程序并报告问题。
+
+总的来说，`Exception` 和 `Error` 在设计初衷和使用场景上有所区别：`Exception` 主要用于表示程序中的一般性异常情况，而 `Error` 则表示更严重的问题，通常需要开发者进行处理和解决。在实际开发中，我们应该根据具体情况选择合适的异常类型，并采取适当的措施来处理和修复问题，以提高程序的健壮性和可靠性。
+
+
+
+### 常的异常类型的使用场景：
+
+| 异常类型                    | 描述                                 | 典型用例                                 |
+| --------------------------- | ------------------------------------ | ---------------------------------------- |
+| Exception                   | 通用异常类型，表示程序中的一般性错误 | 处理非预期的程序错误、无效参数等         |
+| ArgumentError               | 表示由于参数不正确而引发的异常       | 处理函数接收到无效参数的情况             |
+| RangeError                  | 表示由于超出有效范围而引发的异常     | 处理超出范围的索引或值                   |
+| FormatException             | 表示由于格式不正确而引发的异常       | 处理用户输入或解析数据时的格式化错误     |
+| StateError                  | 表示由于对象状态不正确而引发的异常   | 处理对象处于不允许的状态时执行操作的情况 |
+| TypeError                   | 表示由于对象类型不匹配而引发的异常   | 处理对象转换或操作类型不匹配的情况       |
+| CastError                   | 表示由于强制类型转换失败而引发的异常 | 处理类型转换失败的情况                   |
+| NoSuchMethodError           | 表示由于调用不存在的方法而引发的异常 | 处理调用对象不存在的方法的情况           |
+| UnsupportedError            | 表示由于调用不支持的操作而引发的异常 | 处理调用对象不支持的操作的情况           |
+| ConcurrentModificationError | 表示由于并发修改集合而引发的异常     | 处理在迭代期间修改了集合的情况           |
+| StateError                  | 表示由于对象状态不正确而引发的异常   | 处理对象处于不允许的状态时执行操作的情况 |
+| AssertionError              | 表示由于断言失败而引发的异常         | 处理条件不满足时触发的断言失败的情况     |
+| FileSystemException         | 表示由于文件系统操作失败而引发的异常 | 处理文件读写、目录操作等操作失败的情况   |
+| HttpException               | 表示由于 HTTP 请求失败而引发的异常   | 处理 HTTP 请求失败的情况                 |
+| TimeoutException            | 表示由于操作超时而引发的异常         | 处理操作超时的情况                       |
+| SocketException             | 表示由于套接字操作失败而引发的异常   | 处理套接字操作失败的情况                 |
+| ...                         | 其他自定义异常类型                   | 处理特定领域的异常情况                   |
+
+
+**附加题**：这个会正常输出 result 还是抛出异常
+```dart
+void main() async {
+  try {
+    var result = await Future<dynamic>.error(Exception('An error occurred'));
+    print('main result: $result');
+  } on Exception catch (e) { 
+    print('main caught an exception: $e');
+  }
+}
+
+```
