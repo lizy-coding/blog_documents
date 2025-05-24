@@ -89,11 +89,11 @@ MCP 基于 **客户端-服务器架构**，包含三大核心模块：
 
 `Ctrl + Shift + P` 进入编译器搜索 setting 进入配置
 
-![image-20250524103856554](D:\desk\code\blog_documents\image\image-20250524103856554.png)
+![image-20250524103856554](https://github.com/lizy-coding/blog_documents/blob/main/image/image-20250524103856554.png)
 
 笔者界面是已经创建好的，没创建 json 的话右上角有创建全局的选项
 
-![image-20250524103944071](D:\desk\code\blog_documents\image\image-20250524103944071.png)
+![image-20250524103944071](https://github.com/lizy-coding/blog_documents/blob/main/image/image-20250524103944071.png)
 
 举例子：使用 filesystem 及 github mcp 的配置如下
 
@@ -181,11 +181,11 @@ cmd /c npx -y @modelcontextprotocol/server-github --env GITHUB_PERSONAL_ACCESS_T
     *   **绿色**：运行正常
     *   **红色**：查看日志（点击服务右侧的 `View Logs`）
 
-![image-20250524104015103](D:\desk\code\blog_documents\image\image-20250524104015103.png)
+![image-20250524104015103](https://github.com/lizy-coding/blog_documents/blob/main/image/image-20250524104015103.png)
 
 （可选）开启 Enable  auto-run model，后续使用 mcp 自动授权
 
-![image-20250524104143768](D:\desk\code\blog_documents\image\image-20250524104143768.png)
+![image-20250524104143768](https://github.com/lizy-coding/blog_documents/blob/main/image/image-20250524104143768.png)
 
 3.  功能测试指令示例：
 
@@ -197,9 +197,9 @@ cmd /c npx -y @modelcontextprotocol/server-github --env GITHUB_PERSONAL_ACCESS_T
 
 使用 agent 模式
 
-![image-20250524104333210](D:\desk\code\blog_documents\image\image-20250524104333210.png)
+![image-20250524104333210](https://github.com/lizy-coding/blog_documents/blob/main/image/image-20250524104333210.png)
 
-![image-20250524104354141](D:\desk\code\blog_documents\image\image-20250524104354141.png)
+![image-20250524104354141](https://github.com/lizy-coding/blog_documents/blob/main/image/image-20250524104354141.png)
 
 ***
 
