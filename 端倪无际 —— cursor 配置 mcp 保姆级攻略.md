@@ -27,7 +27,8 @@ MCP 基于 **客户端-服务器架构**，包含三大核心模块：
 
 **Host**（如 Cursor IDE）发起请求 → **Client** 连接 Server → **Server**（如文件系统服务）执行操作 → 返回结果至 LLM 生成响应
 
-![image-20250524103538365]([D:\desk\code\blog_documents\image\image-20250524103538365.png)](https://github.com/lizy-coding/blog_documents/blob/main/image/image-20250524103538365.png)
+![image-20250524103538365](https://github.com/lizy-coding/blog_documents/blob/main/image/image-20250524103538365.png)
+
 
 ## Windows 下 Cursor MCP Server 配置全指南（2025.03.29 更新）
 
